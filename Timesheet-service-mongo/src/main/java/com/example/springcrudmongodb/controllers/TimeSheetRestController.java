@@ -1,6 +1,7 @@
 package com.example.springcrudmongodb.controllers;
 
 import com.example.springcrudmongodb.dto.TimeSheetDto;
+import com.example.springcrudmongodb.dto.response.EmployeeWithTimeSheetsDto;
 import com.example.springcrudmongodb.services.ITimeSheetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -10,11 +11,26 @@ import java.util.Map;
 
 
 @RestController
-@RequestMapping("/TimeSheets")
+@RequestMapping("/api/mongo/TimeSheets")
 @RequiredArgsConstructor
 public class TimeSheetRestController{
 
     private final ITimeSheetService TimeSheetService;
+
+
+
+
+    @GetMapping("/with-employee/{id}")
+    public TimeSheetDto getTimeSheetWithEmployee(@PathVariable String id) {
+        return TimeSheetService.getTimeSheetWithEmployee(id);
+    }
+
+    @GetMapping("/employee/{employeeId}/timesheets")
+    public EmployeeWithTimeSheetsDto getEmployeeWithTimeSheets(@PathVariable String employeeId) {
+        return TimeSheetService.getEmployeeWithTimeSheets(employeeId);
+    }
+
+
 
     @PostMapping
     public TimeSheetDto add(@RequestBody TimeSheetDto TimeSheetDto) {

@@ -1,10 +1,14 @@
 package com.example.springcrudmongodb.services;
 
 import com.example.springcrudmongodb.dto.TimeSheetDto;
+import com.example.springcrudmongodb.dto.external.EmployeeDto;
+import com.example.springcrudmongodb.dto.response.EmployeeWithTimeSheetsDto;
 import com.example.springcrudmongodb.entities.TimeSheet;
+import com.example.springcrudmongodb.feign.clients.EmployeeServiceClient;
 import com.example.springcrudmongodb.mappers.TimeSheetMapper;
 import com.example.springcrudmongodb.repositories.TimeSheetRepository;
 import lombok.RequiredArgsConstructor;
+import org.mapstruct.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -13,6 +17,7 @@ import org.springframework.util.ReflectionUtils;
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -22,6 +27,35 @@ public class ITimeSheetServiceImp implements ITimeSheetService {
     private final TimeSheetRepository timeSheetRepository;
     private final TimeSheetMapper timeSheetMapper;
 
+
+
+    private final EmployeeServiceClient employeeServiceClient;
+
+
+    @Override
+    public TimeSheetDto getTimeSheetWithEmployee(String id) {
+        TimeSheetDto dto = getTimeSheet(id);
+        EmployeeDto employee = employeeServiceClient.getEmployee(dto.employeeId());
+
+        String fullName = employee.firstName() + " " + employee.lastName();
+        return TimeSheetDto.withEmployeeName(dto, fullName);
+    }
+
+    @Override
+    public EmployeeWithTimeSheetsDto getEmployeeWithTimeSheets(String employeeId) {
+        EmployeeDto employee = employeeServiceClient.getEmployee(employeeId);
+
+        List<TimeSheetDto> timeSheets = timeSheetRepository
+                .findAll()
+                .stream()
+                .filter(t -> employeeId.equals(t.getEmployeeId()))
+                .map(timeSheetMapper::mapToDto)
+                .toList();
+
+        return new EmployeeWithTimeSheetsDto(employee, timeSheets);
+    }
+
+
     @Override
     public TimeSheetDto add(TimeSheetDto timeSheetDto) {
         TimeSheet timeSheet = timeSheetMapper.mapToEntity(timeSheetDto);
@@ -29,6 +63,11 @@ public class ITimeSheetServiceImp implements ITimeSheetService {
         timeSheet.setUpdatedAt(LocalDateTime.now());
         return timeSheetMapper.mapToDto(timeSheetRepository.save(timeSheet));
     }
+
+//    @Override
+//    public TimeSheetDto addWithEmployee(TimeSheetDto timeSheetDto, String employeeId) {
+//        return null;
+//    }
 
     @Override
     public TimeSheetDto update(String idTimeSheet, Map<Object, Object> fields) {
@@ -75,5 +114,7 @@ public class ITimeSheetServiceImp implements ITimeSheetService {
                 .orElseThrow(() -> new IllegalArgumentException("TimeSheet not found"));
     }
 
-    // ❌ Removed `getTimeSheetByName` because `name` no longer exists in TimeSheet
+
+
+
 }

@@ -10,7 +10,7 @@ import java.util.Map;
 
 
 @RestController
-@RequestMapping("/employees")
+@RequestMapping("/api/postgres/employees")
 @RequiredArgsConstructor
 public class EmployeeRestController{
 

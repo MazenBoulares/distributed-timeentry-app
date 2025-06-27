@@ -1,0 +1,111 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: employee-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    fetch-registry: true
+    register-with-eureka: true
+
+
+
+
+
+
+
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+##server:
+##  port: 8081
+##
+##spring:
+##  application:
+##    name: employee-service
+##  security:
+##    user:
+##      name: admin
+##      password: eureka-secret  # Match server credentials
+##
+##eureka:
+##  client:
+##    register-with-eureka: true
+##    fetch-registry: true
+##    service-url:
+##      defaultZone: http://admin:eureka-secret@localhost:8761/eureka
+##    healthcheck:
+##      enabled: true
+##  instance:
+##    prefer-ip-address: true
+##    lease-renewal-interval-in-seconds: 30
+##    lease-expiration-duration-in-seconds: 90
+##    metadata-map:
+##      user.name: admin
+##      user.password: eureka-secret
+##logging:
+##  level:
+##    org.springframework.cloud: DEBUG
+##    com.netflix.eureka: DEBUG
+##    com.netflix.discovery: DEBUG
+#
+#
+#
+#
+#
+#
+#
+#
+#
+##server:
+##  port: 8081
+##
+##spring:
+##  application:
+##    name: employee-service
+##
+##eureka:
+##  client:
+##    register-with-eureka: true
+##    fetch-registry: true
+##    service-url:
+##      defaultZone: http://admin:eureka-secret@localhost:8761/eureka
+##    healthcheck:
+##      enabled: true
+##  instance:
+##    prefer-ip-address: true
+##    lease-renewal-interval-in-seconds: 30
+##    lease-expiration-duration-in-seconds: 90
+#
+#
+##server:
+##  port: 8081
+##
+##spring:
+##  application:
+##    name: employee-service  # Must be unique
+##
+##eureka:
+##  client:
+##    register-with-eureka: true
+##    fetch-registry: true
+##    service-url:
+##      defaultZone: http://admin:eureka-secret@localhost:8761/eureka  # Use credentials if Eureka server is secured
+##    healthcheck:
+##      enabled: true
+##
+##  instance:
+##    prefer-ip-address: true
+##    lease-renewal-interval-in-seconds: 30
+##    lease-expiration-duration-in-seconds: 90

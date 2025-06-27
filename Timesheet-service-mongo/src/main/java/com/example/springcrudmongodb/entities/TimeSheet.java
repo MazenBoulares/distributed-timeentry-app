@@ -29,7 +29,9 @@ public class TimeSheet implements Serializable {
     @Setter(AccessLevel.MODULE)
     String id;
 
-    String employeeId;             // Who worked
+    String employeeId;
+//    String employeeName;
+
     LocalDateTime startTime;       // Start of work
     LocalDateTime endTime;         // End of work
     String taskDescription;        // What was worked on

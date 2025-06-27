@@ -1,5 +1,7 @@
 package com.example.springcrudmongodb.dto;
 
+import lombok.Data;
+
 import java.time.LocalDateTime;
 
 /**
@@ -28,14 +30,58 @@ import java.time.LocalDateTime;
  * @param createdAt The timestamp when the TimeSheet was created.
  * @param updatedAt The timestamp when the TimeSheet was last updated.
  */
+
 public record TimeSheetDto(
         String id,
         String employeeId,
+        String employeeName, // <-- ajouté ici
         LocalDateTime startTime,
         LocalDateTime endTime,
         String taskDescription,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
-    // No additional methods needed; record provides getters, equals, hashCode, toString.
+    public static TimeSheetDto withEmployeeName(TimeSheetDto dto, String employeeName) {
+        return new TimeSheetDto(
+                dto.id(),
+                dto.employeeId(),
+                employeeName,
+                dto.startTime(),
+                dto.endTime(),
+                dto.taskDescription(),
+                dto.createdAt(),
+                dto.updatedAt()
+        );
+    }
 }
+
+
+//public record TimeSheetDto(
+//        String id,
+//        String employeeId,
+//
+//        String employeeName,
+//
+//
+//        LocalDateTime startTime,
+//        LocalDateTime endTime,
+//        String taskDescription,
+//        LocalDateTime createdAt,
+//        LocalDateTime updatedAt
+//) {
+//    // No additional methods needed; record provides getters, equals, hashCode, toString.
+//}
+//
+//
+//    public static TimeSheetDto withEmployeeName(TimeSheetDto dto, String employeeName) {
+//        return new TimeSheetDto(
+//                dto.id(),
+//                dto.employeeId(),
+//                employeeName,
+//                dto.startTime(),
+//                dto.endTime(),
+//                dto.taskDescription(),
+//                dto.createdAt(),
+//                dto.updatedAt()
+//        );
+//    }
