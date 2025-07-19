@@ -1,0 +1,59 @@
+server:
+  port: 8072  # Gateway port
+
+spring:
+  application:
+    name: api-gateway
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # issuer-uri: http://keycloak:8080/realms/timesheetRealm
+          # jwk-set-uri: http://keycloak:8080/realms/timesheetRealm/protocol/openid-connect/certs
+          issuer-uri: http://localhost:8083/realms/timesheetRealm
+        
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false  # Disable auto-discovery (we're using explicit routes)
+      routes:
+
+        # Keycloak Authentication Routes
+        - id: keycloak-auth
+          uri: http://keycloak:8080
+          predicates:
+            - Path=/auth/**
+          filters:
+            - PreserveHostHeader
+
+
+        # MongoDB TimeSheets Routes
+        - id: timesheet-service
+          uri: lb://timesheet-service  # Service name in Eureka
+          predicates:
+            - Path=/api/timesheets/**
+          filters:
+            - RewritePath=/api/timesheets/(?<segment>.*), /api/mongo/TimeSheets/$\{segment}
+            - AddRequestHeader=Content-Type, application/json
+
+        # PostgreSQL Employees Routes
+        - id: employee-service
+          uri: lb://employee-service  # Service name in Eureka
+          predicates:
+            - Path=/api/employees/**
+          filters:
+            - RewritePath=/api/employees/(?<segment>.*), /api/postgres/employees/$\{segment}
+            - AddRequestParameter=pageNbr, 0  # Default value
+            - AddRequestParameter=pageSize, 10 # Default value
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    healthcheck:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG

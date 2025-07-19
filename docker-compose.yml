@@ -1,15 +1,28 @@
 version: '3.8'
 
 services:
-  # ========== EUREKA SERVER ==========
+  # 🧠 Keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    command: start-dev
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8083:8080"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    networks:
+      - microservices-net
+
+  # 🔍 Eureka
   eureka-server:
-    image: eureka-server:latest
+    build: ./eureka-server
     container_name: eureka-server
     ports:
-      - "8761:8761"
+      - "8762:8761"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka # Internal DNS
     networks:
       - microservices-net
     healthcheck:
@@ -18,21 +31,163 @@ services:
       timeout: 10s
       retries: 5
 
-  # ========== EXAMPLE MICROSERVICE ==========
+  # 👨‍💼 Employee Service
   employee-service:
-    image: employee-service:latest
+    build: ./Employee-service-postgres
     container_name: employee-service
+    ports:
+      - "8082:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka # Note the service name
-    ports:
-      - "8081:8081"
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
     depends_on:
       eureka-server:
         condition: service_healthy
     networks:
       - microservices-net
 
+  # 🕓 Timesheet Service
+  timesheet-service:
+    build: ./Timesheet-service-mongo
+    container_name: timesheet-service
+    ports:
+      - "9091:9090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    networks:
+      - microservices-net
+
+  # 🚪 API Gateway
+  gateway:
+    build: ./api-gateway
+    container_name: gateway
+    ports:
+      - "8073:8072"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+    depends_on:
+      - eureka-server
+    networks:
+      - microservices-net
+
+  # 🔁 Zookeeper
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    ports:
+      - "2182:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - microservices-net
+
+  # 🐘 Kafka
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9093:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - microservices-net
+
 networks:
   microservices-net:
     driver: bridge
+volumes:
+  keycloak_data:
+
+
+# # Removed 'version' (optional for modern Docker)
+
+# networks:
+#   microservices-net:
+#     driver: bridge
+
+
+# services:
+#   # 🧠 Keycloak SSO
+#   keycloak:
+#     image: quay.io/keycloak/keycloak:24.0.1
+#     command: start-dev
+#     environment:
+#       KEYCLOAK_ADMIN: admin
+#       KEYCLOAK_ADMIN_PASSWORD: admin
+#     ports:
+#       - "8080:8080"
+#     networks:
+#       - microservices-net
+
+#   # 🔍 Eureka Discovery Server
+#   eureka-server:
+#     image: eureka-server:latest
+#     container_name: eureka-server
+#     ports:
+#       - "8761:8761"
+#     environment:
+#       - SPRING_PROFILES_ACTIVE=docker
+#     networks:
+#       - microservices-net
+#     healthcheck:
+#       test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+#       interval: 30s
+#       timeout: 10s
+#       retries: 5
+
+#   # 🧰 Employee Microservice
+#   employee-service:
+#     image: employee-service:latest
+#     container_name: employee-service
+#     environment:
+#       - SPRING_PROFILES_ACTIVE=docker
+#       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+#     ports:
+#       - "8081:8081"
+#     depends_on:
+#       eureka-server:
+#         condition: service_healthy
+#     networks:
+#       - microservices-net
+
+#   # 🧭 API Gateway (to secure with Keycloak later)
+#   gateway:
+#     image: gateway-service:latest
+#     container_name: gateway
+#     ports:
+#       - "8072:8072"
+#     environment:
+#       - SPRING_PROFILES_ACTIVE=docker
+#       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+#     depends_on:
+#       - eureka-server
+#     networks:
+#       - microservices-net
+
+#   # 🔁 Zookeeper
+#   zookeeper:
+#     image: confluentinc/cp-zookeeper:latest
+#     ports:
+#       - "2181:2181"
+#     environment:
+#       ZOOKEEPER_CLIENT_PORT: 2181
+#     networks:
+#       - microservices-net
+
+#   # 🐘 Kafka
+#   kafka:
+#     image: confluentinc/cp-kafka:latest
+#     depends_on:
+#       - zookeeper
+#     ports:
+#       - "9092:9092"

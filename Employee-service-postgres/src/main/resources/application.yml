@@ -1,7 +1,7 @@
 server:
   port: 8081
 
-spring:
+Spring:
   application:
     name: employee-service
 
